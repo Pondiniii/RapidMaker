@@ -1,7 +1,4 @@
 import os
-import magic
-import uuid
-import tempfile
 import re
 import mimetypes
 from pydantic import BaseModel
