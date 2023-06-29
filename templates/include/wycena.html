@@ -1,0 +1,61 @@
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-12 text-center">
+            <h1>Szybka wycena online</h1>
+            <p>Wyślij pliki w formatach <strong>.stl</strong>, <strong>.3mf</strong> lub <strong>.obj</strong>, w kilka sekund otrzymasz szczegółową wycenę druku 3D.</p>
+        </div>
+        <div class="col-lg-6">
+            <form action="/uploadfile/" method="post" enctype="multipart/form-data" class="mt-3">
+                <div class="row">
+                    <div class="col-12 col-md-8">
+                        <input type="file" class="form-control" id="inputGroupFile02" name="file" multiple>
+                    </div>
+                    <div class="col-12 col-md-4 mt-3 mt-md-0">
+                        <button class="btn btn-outline-primary w-100" type="submit">Zatwierdź</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div id="progressBarContainer"></div>
+
+
+
+<div class="table-responsive text-center">
+<table class="table table-striped">
+    <thead class="thread-light">
+        <tr>
+            <th>usuń</th>
+            <th>technologia druku</th>
+            <th>materiał</th>
+            <th>ilość</th>
+            <th>zwiększ wytrzymałość</th>
+            <th>nazwa pliku</th>
+            <th>czy się mieści w drukarce</th>
+            <th>koszt</th>
+        </tr>
+    <tbody>
+        {% for file in files_data %}
+            <tr>
+                <th scope="row">{{ loop.index }}</th>
+                <td>{{ file.filename }}</td>
+                <td>{{ file.volume }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<div id="totalCost" class="text-center my-4">Razem: 0 zł</div>
+
+
+<div class="row">
+    <div class="col-6 mx-auto text-center">
+        <p>Cena idealnie wpisuje się w Twoje oczekiwania? Świetnie! Nie wahaj się i napisz do nas e-maila. Jesteśmy tutaj, aby odpowiedzieć na wszystkie Twoje pytania i wątpliwości.</p>
+        <p><a href="mailto:rapidmaker@rapidmaker.pl">rapidmaker@rapidmaker.pl</a></p>
+    </div>
+</div>
