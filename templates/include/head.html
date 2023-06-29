@@ -1,0 +1,33 @@
+<!-- favicon icon -->
+<link rel="icon" href="{{ url_for('static', path='/images/logo.svg') }}" sizes="32x32" />
+
+<!-- Google Fonts Roboto -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
+
+<!-- Google Fonts logo -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700&display=swap" rel="stylesheet">
+
+
+<!-- Bootstrap JS -->
+<script src="{{ url_for('static', path='js/bootstrap.min.js') }}"></script>
+<!-- jQuery -->
+<script src="{{ url_for('static', path='js/jquery-3.7.0.min.js') }}"></script>
+<!--3d_upload-->
+<script src="{{ url_for('static', path='js/3d_upload.js') }}"></script>
+<!--pricing_table_calculator-->
+<script src="{{ url_for('static', path='js/pricing_table_calculator.js') }}"></script>
+<!-- scroll_button -->
+<script src="{{ url_for('static', path='js/scroll_button.js') }}"></script>
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}" />
+<!-- custom css-->
+<link rel="stylesheet" href="{{ url_for('static', path='css/custom.css') }}"/>
+
+{% block head %}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<meta http-equiv="x-ua-compatible" content="ie=edge" />
+<title>Rapid Maker</title>
+{% endblock head %}
