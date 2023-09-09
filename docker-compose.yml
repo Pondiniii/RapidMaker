@@ -1,0 +1,133 @@
+version: "3.3"
+
+networks:
+  default:
+    external: true
+    name: proxy
+
+services:
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=avgoqspam@gmail.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/opt/traefik/letsencrypt:/letsencrypt"
+
+  rapidmaker:
+    image: "rapidmaker"
+    container_name: "rapidmaker"
+    expose:
+      - 80
+    labels:
+      # Włączenie Traefik dla tego kontenera
+      - "traefik.enable=true"
+
+      # Definicja routera HTTP
+      - "traefik.http.routers.rapidmaker.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)" # Obsługuje zarówno www, jak i non-www
+      - "traefik.http.routers.rapidmaker.entrypoints=web"  # Punkt wejścia dla ruchu HTTP (zazwyczaj port 80)
+
+      # Middleware przekierowujące ruch z HTTP na HTTPS
+      - "traefik.http.routers.rapidmaker.middlewares=redirect-to-https, limit-buffer, ratelimit"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"  # Schemat przekierowania na HTTPS
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"  # Przekierowanie jest stałe (kod statusu 301)
+
+      # Definicja routera HTTPS
+      - "traefik.http.routers.rapidmaker-secure.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)" # Obsługuje zarówno www, jak i non-www
+      - "traefik.http.routers.rapidmaker-secure.entrypoints=websecure"  # Punkt wejścia dla ruchu HTTPS (zazwyczaj port 443)
+      - "traefik.http.routers.rapidmaker-secure.tls.certresolver=letsencrypt"  # Używanie resolvera LetsEncrypt do rozwiązywania certyfikatów TLS/SSL
+
+      # Middleware do limitowania rozmiaru bufora żądań
+      - "traefik.http.middlewares.limit-buffer.buffering.maxRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.limit-buffer.buffering.memRequestBodyBytes=32505856"
+
+      # rate limit
+      - "traefik.http.middlewares.ratelimit.ratelimit.average=60"
+      - "traefik.http.middlewares.ratelimit.ratelimit.burst=120"
+      - "traefik.http.middlewares.ratelimit.ratelimit.period=1m"
+
+
+
+  socat:
+    image: alpine/socat
+    command: "tcp-listen:8000,fork,reuseaddr tcp:10.0.0.2:8000"
+    ports:
+      - "8000:8000"
+    restart: always
+    labels:
+      # Włączenie Traefik dla tego kontenera
+      - "traefik.enable=true"
+
+      # Definicja routera HTTP
+      - "traefik.http.routers.bgless-http.rule=Host(`bgless.app`) || Host(`www.bgless.app`)"
+      - "traefik.http.routers.bgless-http.entrypoints=web"
+      - "traefik.http.routers.bgless-http.middlewares=redirect-to-https, limit-buffer, ratelimit"
+
+      # Definicja routera HTTPS
+      - "traefik.http.routers.bgless-secure.rule=Host(`bgless.app`) || Host(`www.bgless.app`)"
+      - "traefik.http.routers.bgless-secure.entrypoints=websecure"
+      - "traefik.http.routers.bgless-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.bgless-secure.middlewares=limit-buffer, ratelimit"
+
+      # Serwis
+      - "traefik.http.services.bgless.loadbalancer.server.port=8000"
+
+      # Middleware do przekierowania z HTTP na HTTPS
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+      # Middleware do limitowania rozmiaru bufora żądań
+      - "traefik.http.middlewares.limit-buffer.buffering.maxRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.limit-buffer.buffering.memRequestBodyBytes=32505856"
+
+      # rate limit
+      - "traefik.http.middlewares.ratelimit.ratelimit.average=60"
+      - "traefik.http.middlewares.ratelimit.ratelimit.burst=120"
+      - "traefik.http.middlewares.ratelimit.ratelimit.period=1m"
+
+
+
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail.rapidmaker.pl
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+    volumes:
+      - "/opt/traefik/letsencrypt/acme.json:/etc/letsencrypt/acme.json:ro"
+      - "/opt/mailserver/mail-data/:/var/mail/"
+      - "/opt/mailserver/mail-state/:/var/mail-state/"
+      - "/opt/mailserver/mail-logs/:/var/log/mail/"
+      - "/opt/mailserver/config/:/tmp/docker-mailserver/"
+      - "/opt/mailserver/etc/rspamd/override.d/:/etc/rspamd/override.d/"
+      - "/etc/localtime:/etc/localtime:ro"
+    environment:
+      - SSL_TYPE=letsencrypt
+      - SSL_DOMAIN=mail.rapidmaker.pl
+      - ENABLE_RSPAMD=1
+      - ENABLE_CLAMAV=1
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_OPENDKIM=0
+      - ENABLE_OPENDMARC=0
+      - ENABLE_POLICYD_SPF=0
+      - ENABLE_AMAVIS=0
+    cap_add:
+      - NET_ADMIN
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailserver.rule=Host(`mail.rapidmaker.pl`)"
+      - "traefik.http.routers.mailserver.entrypoints=websecure"
+      - "traefik.http.routers.mailserver.tls.certresolver=letsencrypt"
+    restart: always

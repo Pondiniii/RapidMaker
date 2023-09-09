@@ -1,5 +1,14 @@
 <!-- favicon icon -->
-<link rel="icon" href="{{ url_for('static', path='/images/logo.svg') }}" sizes="32x32" />
+<link rel="icon" href="/static/images/logo.svg" sizes="32x32" />
+
+<!-- Bootstrap JS -->
+<script src="/static/libs/bootstrap/bootstrap.min.js"></script>
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="/static/libs/bootstrap/bootstrap.min.css" />
+
+<!-- custom css-->
+<link rel="stylesheet" href="/static/css/custom.css"/>
 
 <!-- Google Fonts Roboto -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
@@ -9,25 +18,36 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700&display=swap" rel="stylesheet">
 
+<!--upload_stl.js-->
+<script src="/static/js/upload_stl.js"></script>
+<!-- scroll_button.js -->
+<script src="/static/js/scroll_button.js"></script>
+<!-- material_properties_color.js -->
+<script src="/static/js/material_properties_color.js"></script>
 
-<!-- Bootstrap JS -->
-<script src="{{ url_for('static', path='js/bootstrap.min.js') }}"></script>
-<!-- jQuery -->
-<script src="{{ url_for('static', path='js/jquery-3.7.0.min.js') }}"></script>
-<!--3d_upload-->
-<script src="{{ url_for('static', path='js/3d_upload.js') }}"></script>
-<!--pricing_table_calculator-->
-<script src="{{ url_for('static', path='js/pricing_table_calculator.js') }}"></script>
-<!-- scroll_button -->
-<script src="{{ url_for('static', path='js/scroll_button.js') }}"></script>
-<!-- Bootstrap CSS -->
-<link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}" />
-<!-- custom css-->
-<link rel="stylesheet" href="{{ url_for('static', path='css/custom.css') }}"/>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-W24CZFLLDN">
+</script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-W24CZFLLDN');
+</script>
 
 {% block head %}
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-<meta http-equiv="x-ua-compatible" content="ie=edge" />
+<meta name="description" content="F">
+<link rel="canonical" href="https://rapidmaker.pl/" />
+<meta name="robots" content="index, follow">
+
+<meta property="og:title" content="rapidmaker.pl">
+<meta name="description" content="Wyślij nam swój plik, a my zajmiemy się resztą. Profesjonalne wydruki 3D w zasięgu ręki.">
+
+<meta property="og:image" content="/static/images/logo.svg">
+<meta property="og:url" content="https://rapidmaker.pl/">
 <title>Rapid Maker</title>
 {% endblock head %}

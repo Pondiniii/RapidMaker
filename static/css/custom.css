@@ -7,3 +7,37 @@
     box-shadow: inset 0 0.5em 1.5em rgba(0, 0, 0, .1), inset 0 0.125em 0.5em rgba(0, 0, 0, .15);
 }
 
+
+/* Dla przycisku usuwania */
+.deleteButton {
+    min-width: 30px;
+}
+
+/* Dla komórki z nazwą pliku */
+.tdFilename {
+    min-width: 150px;
+    max-width: 200px;
+
+}
+
+/* Dla menu wyboru materiału */
+.selectMaterial {
+    min-width: 100px;
+
+}
+
+/* Dla pola ilość sztuk */
+.inputQuantity {
+    min-width: 50px;
+
+}
+
+.tdPrice {
+    min-width: 100px;
+}
+
+.table .cell-5 { background-color: rgba(0, 255, 0, 0.15); } /* Delikatny zielony */
+.table .cell-4 { background-color: rgba(100, 230, 0, 0.15); }
+.table .cell-3 { background-color: rgba(230, 230, 0, 0.15); } /* Żółty */
+.table .cell-2 { background-color: rgba(230, 100, 0, 0.15); }
+.table .cell-1 { background-color: rgba(255, 0, 0, 0.15); } /* Delikatny czerwony */
