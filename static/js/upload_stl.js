@@ -14,12 +14,23 @@ document.addEventListener("DOMContentLoaded", function() {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 413) {
+                // Payload too large
+                throw new Error("File size is too large.");
+            }
+            return response.json();
+        })
         .then(data => {
             appendResult(data);
         })
         .catch((error) => {
             console.error('Error:', error);
+
+            // If the error is about file size, alert the user.
+            if (error.message.includes("File size is too large.")) {
+                alert("Uploaded file is too large! Please select a smaller file.");
+            }
         })
         .finally(() => {
             // Przywracamy przycisk do pierwotnego stanu

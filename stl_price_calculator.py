@@ -16,10 +16,10 @@ def calculate_print_options(volume: float, bounding_box_dimensions: list, surfac
         "nylon_resin": 250,
         "abs_resin": 300,
 
-        "abs": 100,
-        "pla": 80,
-        "pc": 120,
-        "tpu": 160,
+        "abs": 125,
+        "pla": 90,
+        "pc": 240,
+        "tpu": 210,
     }
 
     # Gęstości dla poszczególnych materiałów w g/cm^3
@@ -36,22 +36,30 @@ def calculate_print_options(volume: float, bounding_box_dimensions: list, surfac
 
     # koszt produkcji razy multiplier który mówi nam
     MATERIAL_PROFIT_MULTIPLIERS = {
-        "flex_resin": 4,
-        "nylon_resin": 4,
+        "flex_resin": 6,
+        "nylon_resin": 5,
         "abs_resin": 4,
 
-        "abs": 2,
-        "pla": 2,
-        "pc": 3,
-        "tpu": 3,
+        "abs": 14,
+        "pla": 14,
+        "pc": 7,
+        "tpu": 7,
     }
+
+    MATERIAL_INIT_COST = {
+        "flex_resin": 80,
+        "nylon_resin": 50,
+        "abs_resin": 50,
+
+        "abs": 30,
+        "pla": 15,
+        "pc": 100,
+        "tpu": 50,
+    }
+
 
     LARGE_PRINTER_DIMENSIONS = [500, 500, 500]
     RESIN_PRINTER_DIMENSIONS = [180, 180, 369]
-
-    LARGE_PRINTER_INIT_COST = 10
-    RESIN_PRINTER_INIT_COST = 35
-
     materials = {}
 
     # Ustalanie wartości infill_walls w zależności od porównania volume z surface_area
@@ -76,15 +84,14 @@ def calculate_print_options(volume: float, bounding_box_dimensions: list, surfac
         for material in ["abs", "pla", "pc", "tpu"]:
             mass = adjusted_volume * MATERIAL_DENSITIES[material]
             mass_kg = mass / 1000
-            materials[material] = round(LARGE_PRINTER_INIT_COST + (mass_kg * MATERIAL_COSTS[material] * MATERIAL_PROFIT_MULTIPLIERS[material]), 2)
-
+            materials[material] = round(MATERIAL_INIT_COST[material] + (mass_kg * MATERIAL_COSTS[material] * MATERIAL_PROFIT_MULTIPLIERS[material]), 2)
 
     # Jeżeli model mieści się w RESIN_PRINTER_DIMENSIONS
     if all(size <= max_size for size, max_size in zip(bounding_box_dimensions, RESIN_PRINTER_DIMENSIONS)):
         for material in ["flex_resin", "nylon_resin", "abs_resin"]:
             mass = volume * MATERIAL_DENSITIES[material]
             mass_kg = mass / 1000
-            materials[material] = round(RESIN_PRINTER_INIT_COST + (mass_kg * MATERIAL_COSTS[material] * MATERIAL_PROFIT_MULTIPLIERS[material]), 2)
+            materials[material] = round(MATERIAL_INIT_COST[material] + (mass_kg * MATERIAL_COSTS[material] * MATERIAL_PROFIT_MULTIPLIERS[material]), 2)
 
     return materials
 
@@ -109,11 +116,3 @@ def calc_volume_bbox(stl_content: bytes):
     surface_area = round(your_mesh.areas.sum() * 2 / 1000, 2)
 
     return volume_cm3, bounding_box_dimensions, surface_area
-
-
-# volume, bounding_box_dimensions, surface_area = calc_volume_bbox('sample.stl')
-# print(f"Objętość: {volume}")
-# print(f"Wymiary Bounding Box: {bounding_box_dimensions}")
-# print(f"Surface area: {surface_area}")
-# print(calculate_print_options(volume, bounding_box_dimensions, surface_area))
-

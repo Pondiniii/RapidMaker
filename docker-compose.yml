@@ -30,36 +30,25 @@ services:
     expose:
       - 80
     labels:
-      # Włączenie Traefik dla tego kontenera
       - "traefik.enable=true"
-
-      # Definicja routera HTTP
-      - "traefik.http.routers.rapidmaker.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)" # Obsługuje zarówno www, jak i non-www
-      - "traefik.http.routers.rapidmaker.entrypoints=web"  # Punkt wejścia dla ruchu HTTP (zazwyczaj port 80)
-
-      # Middleware przekierowujące ruch z HTTP na HTTPS
-      - "traefik.http.routers.rapidmaker.middlewares=redirect-to-https, limit-buffer, ratelimit"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"  # Schemat przekierowania na HTTPS
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"  # Przekierowanie jest stałe (kod statusu 301)
-
-      # Definicja routera HTTPS
-      - "traefik.http.routers.rapidmaker-secure.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)" # Obsługuje zarówno www, jak i non-www
-      - "traefik.http.routers.rapidmaker-secure.entrypoints=websecure"  # Punkt wejścia dla ruchu HTTPS (zazwyczaj port 443)
-      - "traefik.http.routers.rapidmaker-secure.tls.certresolver=letsencrypt"  # Używanie resolvera LetsEncrypt do rozwiązywania certyfikatów TLS/SSL
-
-      # Middleware do limitowania rozmiaru bufora żądań
-      - "traefik.http.middlewares.limit-buffer.buffering.maxRequestBodyBytes=32505856"
-      - "traefik.http.middlewares.limit-buffer.buffering.memRequestBodyBytes=32505856"
-
-      # rate limit
-      - "traefik.http.middlewares.ratelimit.ratelimit.average=60"
-      - "traefik.http.middlewares.ratelimit.ratelimit.burst=120"
-      - "traefik.http.middlewares.ratelimit.ratelimit.period=1m"
-
-
+      - "traefik.http.routers.rapidmaker.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)"
+      - "traefik.http.routers.rapidmaker.entrypoints=web"
+      - "traefik.http.routers.rapidmaker.middlewares=redirect@docker,ratelimit-rapidmaker"
+      - "traefik.http.middlewares.redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect.redirectscheme.permanent=true"
+      - "traefik.http.middlewares.limit-buffer-rapidmaker.buffering.maxRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.limit-buffer-rapidmaker.buffering.memRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.ratelimit-rapidmaker.ratelimit.average=60"
+      - "traefik.http.middlewares.ratelimit-rapidmaker.ratelimit.burst=120"
+      - "traefik.http.middlewares.ratelimit-rapidmaker.ratelimit.period=1m"
+      - "traefik.http.routers.rapidmaker-secure.rule=Host(`rapidmaker.pl`) || Host(`www.rapidmaker.pl`)"
+      - "traefik.http.routers.rapidmaker-secure.entrypoints=websecure"
+      - "traefik.http.routers.rapidmaker-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rapidmaker-secure.middlewares=limit-buffer-rapidmaker,redirect@docker,ratelimit-rapidmaker"
 
   socat:
     image: alpine/socat
+    container_name: "bgless"
     command: "tcp-listen:8000,fork,reuseaddr tcp:10.0.0.2:8000"
     ports:
       - "8000:8000"
@@ -71,28 +60,29 @@ services:
       # Definicja routera HTTP
       - "traefik.http.routers.bgless-http.rule=Host(`bgless.app`) || Host(`www.bgless.app`)"
       - "traefik.http.routers.bgless-http.entrypoints=web"
-      - "traefik.http.routers.bgless-http.middlewares=redirect-to-https, limit-buffer, ratelimit"
+      - "traefik.http.routers.bgless-http.middlewares=redirect-to-https-bgless, limit-buffer-bgless, ratelimit-bgless"
+
 
       # Definicja routera HTTPS
       - "traefik.http.routers.bgless-secure.rule=Host(`bgless.app`) || Host(`www.bgless.app`)"
       - "traefik.http.routers.bgless-secure.entrypoints=websecure"
       - "traefik.http.routers.bgless-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.bgless-secure.middlewares=limit-buffer, ratelimit"
+      - "traefik.http.routers.bgless-secure.middlewares=limit-buffer-bgless, ratelimit-bgless"
 
       # Serwis
       - "traefik.http.services.bgless.loadbalancer.server.port=8000"
 
       # Middleware do przekierowania z HTTP na HTTPS
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https-bgless.redirectscheme.scheme=https"
 
       # Middleware do limitowania rozmiaru bufora żądań
-      - "traefik.http.middlewares.limit-buffer.buffering.maxRequestBodyBytes=32505856"
-      - "traefik.http.middlewares.limit-buffer.buffering.memRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.limit-buffer-bgless.buffering.maxRequestBodyBytes=32505856"
+      - "traefik.http.middlewares.limit-buffer-bgless.buffering.memRequestBodyBytes=32505856"
 
       # rate limit
-      - "traefik.http.middlewares.ratelimit.ratelimit.average=60"
-      - "traefik.http.middlewares.ratelimit.ratelimit.burst=120"
-      - "traefik.http.middlewares.ratelimit.ratelimit.period=1m"
+      - "traefik.http.middlewares.ratelimit-bgless.ratelimit.average=60"
+      - "traefik.http.middlewares.ratelimit-bgless.ratelimit.burst=120"
+      - "traefik.http.middlewares.ratelimit-bgless.ratelimit.period=1m"
 
 
 
