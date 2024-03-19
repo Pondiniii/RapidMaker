@@ -20,29 +20,29 @@ async def home(request: Request):
     return templates.TemplateResponse('page.html', context={'request': request})
 
 
-@app.post("/upload/stl")
-async def upload_stl(file: UploadFile = None):
-    if not file:
-        raise HTTPException(status_code=400, detail="File not provided")
+# @app.post("/upload/stl")
+# async def upload_stl(file: UploadFile = None):
+#     if not file:
+#         raise HTTPException(status_code=400, detail="File not provided")
 
-    file_content = await file.read()
+#     file_content = await file.read()
 
-    # Sprawdzanie poprawności i nazwy pliku
-    is_valid, new_file_name = file_check(file_content, file.filename)
-    if not is_valid:
-        raise HTTPException(status_code=400, detail=new_file_name)  # Tutaj używamy new_file_name jako szczegół błędu
+#     # Sprawdzanie poprawności i nazwy pliku
+#     is_valid, new_file_name = file_check(file_content, file.filename)
+#     if not is_valid:
+#         raise HTTPException(status_code=400, detail=new_file_name)  # Tutaj używamy new_file_name jako szczegół błędu
 
-    try:
-        # Obliczanie objętości, wymiarów bounding box i powierzchni
-        volume, bounding_box_dimensions, surface_area = calc_volume_bbox(file_content)
+#     try:
+#         # Obliczanie objętości, wymiarów bounding box i powierzchni
+#         volume, bounding_box_dimensions, surface_area = calc_volume_bbox(file_content)
 
-        # Obliczanie ceny
-        price_dict = calculate_print_options(volume, bounding_box_dimensions, surface_area)
+#         # Obliczanie ceny
+#         price_dict = calculate_print_options(volume, bounding_box_dimensions, surface_area)
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file: {e}")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error processing file: {e}")
 
-    return {
-        "filename": new_file_name,  # Teraz używamy nowej, przetworzonej nazwy pliku
-        "price_dict": price_dict
-    }
+#     return {
+#         "filename": new_file_name,  # Teraz używamy nowej, przetworzonej nazwy pliku
+#         "price_dict": price_dict
+#     }
