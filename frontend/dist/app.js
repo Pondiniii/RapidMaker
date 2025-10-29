@@ -38,7 +38,7 @@ async function hydrateMaterials() {
     for (const mat of materials) {
       const option = document.createElement('option');
       option.value = mat.id;
-      option.textContent = `${mat.display_name} · ${mat.kind.toUpperCase()} (${mat.density_g_cm3.toFixed(2)} g/cm³)`;
+      option.textContent = mat.display_name;
       materialSelect.appendChild(option);
     }
   } catch (error) {
