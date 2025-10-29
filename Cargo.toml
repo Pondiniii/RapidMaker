@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "crates/price-engine",
+    "crates/rapidmaker-api",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+authors = ["RapidMaker"]
+repository = "https://example.com/rapidmaker"  # TODO update

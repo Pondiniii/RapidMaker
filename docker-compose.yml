@@ -1,0 +1,27 @@
+services:
+  api:
+    build: .
+    image: rapidmaker/api:latest
+    ports:
+      - "8080:8080"
+    environment:
+      RAPIDMAKER_BIND: "0.0.0.0:8080"
+      RAPIDMAKER_UPLOAD_DIR: "/tmp/rapidmaker"
+      RUST_LOG: "info"
+    tmpfs:
+      - /tmp/rapidmaker:size=64m,noexec,nosuid
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  orca-worker:
+    build:
+      context: .
+      dockerfile: docker/orca-worker/Dockerfile
+    image: rapidmaker/orca-worker:latest
+    command: ["--help"]
+    profiles: ["orca"]
