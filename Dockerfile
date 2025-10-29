@@ -4,15 +4,14 @@ FROM rust:1.76-slim AS builder
 WORKDIR /app
 
 # Cache dependencies
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 COPY crates/price-engine/Cargo.toml crates/price-engine/Cargo.toml
 COPY crates/rapidmaker-api/Cargo.toml crates/rapidmaker-api/Cargo.toml
-RUN mkdir -p frontend/dist && \ 
-    cargo fetch
+RUN cargo fetch
 
 # Build sources
 COPY . .
-RUN cargo build --release -p rapidmaker-api
+RUN mkdir -p frontend/dist && cargo build --release -p rapidmaker-api
 
 FROM debian:bookworm-slim AS runtime
 WORKDIR /app

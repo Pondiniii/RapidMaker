@@ -5,6 +5,10 @@ edition = "2021"
 description = "RapidMaker web API and static asset server"
 license = "MIT"
 
+[[bin]]
+name = "rapidmaker-api"
+path = "src/main.rs"
+
 [dependencies]
 axum = { version = "0.7", features = ["multipart"] }
 serde = { version = "1", features = ["derive"] }
