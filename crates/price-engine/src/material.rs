@@ -61,12 +61,20 @@ impl MaterialCatalog {
             MaterialProfile::new("abs", "ABS", MaterialKind::Fdm, 1.05, 125.0, 0.0, 1.0),
         );
         entries.insert(
+            "petg".into(),
+            MaterialProfile::new("petg", "PETG", MaterialKind::Fdm, 1.27, 115.0, 0.0, 1.0),
+        );
+        entries.insert(
             "pc".into(),
             MaterialProfile::new("pc", "PC", MaterialKind::Fdm, 1.2, 240.0, 0.0, 1.0),
         );
         entries.insert(
             "tpu".into(),
             MaterialProfile::new("tpu", "TPU", MaterialKind::Fdm, 1.25, 210.0, 0.0, 1.0),
+        );
+        entries.insert(
+            "asa".into(),
+            MaterialProfile::new("asa", "ASA", MaterialKind::Fdm, 1.07, 145.0, 0.0, 1.0),
         );
 
         Self { entries }

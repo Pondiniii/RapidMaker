@@ -13,7 +13,7 @@ use axum::{
     routing::{get, get_service, post},
     Json, Router,
 };
-use price_engine::{EngineError, ModelKind, PriceEngine, QuoteInput, QuoteOutput};
+use price_engine::{EngineError, ModelKind, PriceEngine, QuoteInput, QuoteOutput, Turnaround};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::{io::AsyncWriteExt, net::TcpListener};
@@ -120,17 +120,13 @@ async fn quote_gcode(
     State(state): State<AppState>,
     Json(payload): Json<GcodeQuoteRequest>,
 ) -> Result<Json<QuoteOutput>, ApiError> {
-    let mut input = QuoteInput {
-        material_id: payload.material_id.clone(),
-        infill_percent: Some(DEFAULT_INFILL_PERCENT),
-        supports: true,
-        cost_per_kg_override: None,
-        base_fee_override: None,
-    };
-
+    let mut input = QuoteInput::material(payload.material_id.clone());
     if input.material_id.is_empty() {
         input.material_id = DEFAULT_MATERIAL_ID.to_string();
     }
+    input.infill_percent = Some(DEFAULT_INFILL_PERCENT);
+    input.quantity = payload.quantity.unwrap_or(1).max(1);
+    input.turnaround = payload.turnaround.unwrap_or_default();
 
     let output = state
         .engine
@@ -193,6 +189,8 @@ async fn quote_file(
     input.supports = true;
     input.cost_per_kg_override = None;
     input.base_fee_override = None;
+    input.quantity = form.quantity.unwrap_or(1).max(1);
+    input.turnaround = form.turnaround.unwrap_or_default();
 
     let kind = detect_model_kind(Some(&file_name), &data)?;
     let quote = match kind {
@@ -248,12 +246,19 @@ impl From<price_engine::MaterialProfile> for MaterialDTO {
 struct GcodeQuoteRequest {
     material_id: String,
     gcode: String,
+    #[serde(default)]
+    quantity: Option<u32>,
+    #[serde(default)]
+    turnaround: Option<Turnaround>,
 }
 
 #[derive(Default)]
 struct FormOptions {
     filename: Option<String>,
     material_id: Option<String>,
+    quantity: Option<u32>,
+    turnaround: Option<Turnaround>,
+    client_email: Option<String>,
 }
 
 impl FormOptions {
@@ -265,6 +270,31 @@ impl FormOptions {
 
         match field {
             "material_id" => self.material_id = Some(value.to_string()),
+            "quantity" => {
+                let parsed = value.parse::<u32>().map_err(|_| {
+                    ApiError::BadRequest("quantity must be a positive integer".into())
+                })?;
+                if parsed == 0 {
+                    return Err(ApiError::BadRequest("quantity must be at least 1".into()));
+                }
+                self.quantity = Some(parsed);
+            }
+            "turnaround" => {
+                let normalized = value.to_ascii_lowercase();
+                let turnaround = match normalized.as_str() {
+                    "express" | "1d" | "1dzień" | "1-day" => Turnaround::Express,
+                    "standard" | "3-5" | "3_5" | "normal" => Turnaround::Standard,
+                    other => {
+                        return Err(ApiError::BadRequest(format!(
+                            "unknown turnaround option: {other}"
+                        )));
+                    }
+                };
+                self.turnaround = Some(turnaround);
+            }
+            "client_email" => {
+                self.client_email = Some(value.to_string());
+            }
             other => {
                 return Err(ApiError::BadRequest(format!("unknown form field: {other}")));
             }

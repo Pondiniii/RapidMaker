@@ -9,6 +9,8 @@ pub struct QuoteInput {
     pub supports: bool,
     pub cost_per_kg_override: Option<f64>,
     pub base_fee_override: Option<f64>,
+    pub quantity: u32,
+    pub turnaround: Turnaround,
 }
 
 impl QuoteInput {
@@ -19,6 +21,8 @@ impl QuoteInput {
             supports: true,
             cost_per_kg_override: None,
             base_fee_override: None,
+            quantity: 1,
+            turnaround: Turnaround::default(),
         }
     }
 }
@@ -30,6 +34,14 @@ pub struct QuoteBreakdown {
     pub labor_cost: f64,
     pub base_fee: f64,
     pub margin_multiplier: f64,
+    pub quantity: u32,
+    pub unit_total: f64,
+    pub subtotal: f64,
+    pub express_multiplier: f64,
+    pub turnaround: Turnaround,
+    pub discount_rate: f64,
+    pub discount_amount: f64,
+    pub review_required: bool,
     pub total: f64,
     pub is_estimate: bool,
 }
@@ -39,4 +51,12 @@ pub struct QuoteOutput {
     pub metadata: ModelMetadata,
     pub material: MaterialProfile,
     pub breakdown: QuoteBreakdown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Turnaround {
+    #[default]
+    Standard,
+    Express,
 }

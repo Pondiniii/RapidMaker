@@ -6,6 +6,7 @@ use crate::{
     error::EngineError,
     material::{MaterialCatalog, MaterialProfile},
     model::{FilamentStats, GeometryStats, ModelKind, ModelMetadata},
+    pricing::{self, PricingInput},
     quote::{QuoteBreakdown, QuoteInput, QuoteOutput},
 };
 use quick_xml::events::Event;
@@ -13,14 +14,11 @@ use quick_xml::Reader;
 use smallvec::SmallVec;
 use zip::ZipArchive;
 
-const DEFAULT_CURRENCY: &str = "PLN";
-const DEFAULT_INFILL_PERCENT: u8 = 25;
 const MIN_INFILL_PERCENT: u8 = 0;
 const MAX_INFILL_PERCENT: u8 = 100;
 const PRINT_SPEED_MM_PER_S: f64 = 60.0; // heuristic average
 const LAYER_HEIGHT_MM: f64 = 0.2;
 const FILAMENT_DIAMETER_MM: f64 = 1.75;
-const BASE_FEE_PLN: f64 = 50.0;
 
 pub struct PriceEngine {
     currency: String,
@@ -41,7 +39,7 @@ impl Default for PriceEngine {
 impl PriceEngine {
     pub fn new() -> Self {
         Self {
-            currency: DEFAULT_CURRENCY.to_string(),
+            currency: pricing::DEFAULT_CURRENCY.to_string(),
             materials: MaterialCatalog::with_defaults().into_inner(),
         }
     }
@@ -130,8 +128,9 @@ impl PriceEngine {
             metadata.filament.filament_type = Some(material.display_name.clone());
         }
         if metadata.filament.infill_percent.is_none() {
-            metadata.filament.infill_percent =
-                input.infill_percent.or(Some(DEFAULT_INFILL_PERCENT));
+            metadata.filament.infill_percent = input
+                .infill_percent
+                .or(Some(pricing::DEFAULT_INFILL_PERCENT));
         }
         if metadata.filament.supports_enabled.is_none() {
             metadata.filament.supports_enabled = Some(input.supports);
@@ -145,20 +144,40 @@ impl PriceEngine {
         let cost_per_kg = input
             .cost_per_kg_override
             .unwrap_or(material.cost_per_kg as f64);
-        let base_fee = input.base_fee_override.unwrap_or(BASE_FEE_PLN);
         let margin = material.margin_multiplier as f64;
 
-        let material_cost = grams / 1000.0 * cost_per_kg;
-        let subtotal = base_fee + material_cost;
-        let total = subtotal * margin;
+        let base_fee = input.base_fee_override.unwrap_or_else(|| {
+            if material.base_fee > 0.0 {
+                material.base_fee as f64
+            } else {
+                pricing::BASE_FEE_PLN
+            }
+        });
+
+        let material_cost_per_unit = grams / 1000.0 * cost_per_kg;
+        let pricing = pricing::compute(PricingInput {
+            quantity: input.quantity.max(1),
+            turnaround: input.turnaround.clone(),
+            base_fee,
+            material_cost_per_unit,
+            margin_multiplier: margin,
+        });
 
         let breakdown = QuoteBreakdown {
             currency: self.currency.clone(),
-            material_cost,
+            material_cost: pricing.material_cost_total - pricing.discount_amount,
             labor_cost: 0.0,
-            base_fee,
+            base_fee: pricing.base_fee,
             margin_multiplier: margin,
-            total,
+            quantity: pricing.quantity,
+            unit_total: pricing.unit_total,
+            subtotal: pricing.subtotal_after_turnaround,
+            express_multiplier: pricing.express_multiplier,
+            turnaround: pricing.turnaround.clone(),
+            discount_rate: pricing.discount_rate,
+            discount_amount: pricing.discount_amount,
+            review_required: pricing.review_required,
+            total: pricing.total,
             is_estimate,
         };
 
@@ -360,7 +379,7 @@ fn estimate_stl_metadata(data: &[u8], input: &QuoteInput) -> Result<StlEstimate,
 
     let infill = input
         .infill_percent
-        .unwrap_or(DEFAULT_INFILL_PERCENT)
+        .unwrap_or(pricing::DEFAULT_INFILL_PERCENT)
         .clamp(MIN_INFILL_PERCENT, MAX_INFILL_PERCENT);
 
     let mut solid_ratio = estimate_solid_ratio(infill as f64);
@@ -596,12 +615,40 @@ mod tests {
     #[test]
     fn estimates_from_stl() {
         let engine = PriceEngine::new();
-        let stl_path =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../sample-cube-20mm.stl");
-        let data = std::fs::read(&stl_path).expect("sample stl");
+        const ASCII_STL: &str = r"solid tetrahedron
+  facet normal 0 0 1
+    outer loop
+      vertex 0 0 0
+      vertex 20 0 0
+      vertex 0 20 0
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 0 0 0
+      vertex 0 20 0
+      vertex 0 0 20
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 0 0 0
+      vertex 0 0 20
+      vertex 20 0 0
+    endloop
+  endfacet
+  facet normal 1 1 1
+    outer loop
+      vertex 20 0 0
+      vertex 0 0 20
+      vertex 0 20 0
+    endloop
+  endfacet
+endsolid tetrahedron
+";
 
         let quote = engine
-            .estimate_from_stl_bytes(&data, QuoteInput::material("pla"))
+            .estimate_from_stl_bytes(ASCII_STL.as_bytes(), QuoteInput::material("pla"))
             .expect("stl estimate");
 
         assert_eq!(quote.metadata.kind, ModelKind::Stl);

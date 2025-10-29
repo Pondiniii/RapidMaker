@@ -86,7 +86,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span>Materiały</span>
-                <strong class="text-emerald-300">PLA · ABS · PC · TPU</strong>
+                <strong class="text-emerald-300">PLA · PETG · ASA · TPU</strong>
               </div>
               <div class="flex items-center justify-between">
                 <span>Jakość kontroli</span>
@@ -94,7 +94,7 @@
               </div>
             </div>
           </div>
-          <p class="text-xs leading-relaxed text-slate-500">Druki realizujemy lokalnie w Warszawie. Odbiór osobisty lub wysyłka na terenie całej Polski.</p>
+          <p class="text-xs leading-relaxed text-slate-500">Druki realizujemy lokalnie w Piasecznie. Odbiór osobisty lub wysyłka na terenie całej Polski.</p>
         </div>
       </div>
     </header>
@@ -113,6 +113,42 @@
               <p class="text-xs text-slate-500">Domyślnie: infill 25%, podpory włączone, opłata startowa 50 zł wliczona w cenę.</p>
             </div>
 
+            <div class="grid gap-6 md:grid-cols-2">
+              <div class="space-y-2">
+                <label for="quantityInput" class="block text-sm font-medium text-slate-300">Ilość kopii modelu</label>
+                <input
+                  id="quantityInput"
+                  type="number"
+                  min="1"
+                  value="1"
+                  class="w-full rounded-xl border border-slate-700/60 bg-slate-900/70 px-4 py-3 text-slate-100 focus:outline-none"
+                />
+                <p class="text-xs text-slate-500">Automatyczna wycena działa do 30 sztuk. Większe serie przechodzą do indywidualnej analizy.</p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-300">Termin realizacji</label>
+                <div class="turnaround-toggle flex overflow-hidden rounded-xl border border-emerald-500/20 bg-slate-900/60">
+                  <button type="button" class="turnaround-option is-active flex-1 px-4 py-3 text-sm font-semibold text-emerald-200" data-turnaround="standard">3–5 dni roboczych</button>
+                  <button type="button" class="turnaround-option flex-1 px-4 py-3 text-sm font-semibold text-emerald-200/60 transition hover:text-emerald-100" data-turnaround="express">1 dzień roboczy (+35%)</button>
+                </div>
+                <p class="text-xs text-slate-500">Ekspres oznacza priorytetowe planowanie, druk nocny oraz kontrolę jakości poza standardowym harmonogramem.</p>
+              </div>
+            </div>
+
+            <div id="manualNotice" class="hidden space-y-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100">
+              <p class="font-semibold text-emerald-200">Dla serii powyżej 30 sztuk przygotujemy ofertę indywidualną.</p>
+              <p class="text-emerald-100/90">Wypełnij e-mail, a przygotujemy szkic wiadomości z podsumowaniem zamówienia.</p>
+              <label for="manualEmail" class="block text-xs font-medium uppercase tracking-[0.2em] text-emerald-200">E-mail kontaktowy</label>
+              <input id="manualEmail" type="email" placeholder="np. inżynier@twojafirma.pl" class="w-full rounded-xl border border-emerald-500/30 bg-slate-900/70 px-4 py-3 text-emerald-200 placeholder:text-emerald-200/40 focus:outline-none" />
+              <a id="manualMailto" href="mailto:druk@rapidmaker.pl" class="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-400/80 hover:text-emerald-50">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.25l9 5.25 9-5.25M4.5 19.5h15a1.5 1.5 0 0 0 1.5-1.5v-9a1.5 1.5 0 0 0-.832-1.341l-9-4.5a1.5 1.5 0 0 0-1.336 0l-9 4.5A1.5 1.5 0 0 0 3 9v9a1.5 1.5 0 0 0 1.5 1.5z" />
+                </svg>
+                Zapisz szkic maila
+              </a>
+              <p class="text-xs text-emerald-100/70">Rabaty: powyżej 40 sztuk naliczamy 5% zniżki co każde 10 dodatkowych modeli.</p>
+            </div>
+
             <div id="dropZone" class="drop-zone glass-panel gradient-border flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-600/60 px-6 py-12 text-center text-sm text-slate-300">
               <div class="flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                 <svg class="h-7 w-7 text-emerald-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -124,8 +160,8 @@
             </div>
 
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-rapid px-6 py-3 text-base font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">
-                <span>Policz koszt</span>
+              <button id="quoteSubmit" type="submit" data-auto-label="Policz koszt" data-manual-label="Wyślij do analizy" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-rapid px-6 py-3 text-base font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">
+                <span id="quoteSubmitLabel">Policz koszt</span>
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0-6-6m6 6-6 6" />
                 </svg>
@@ -164,7 +200,7 @@
           </div>
           <div class="feature-card p-6">
             <h3 class="text-lg font-semibold text-emerald-300">Wykończenie „plug & play”</h3>
-            <p class="mt-3 text-sm text-slate-300">Poza samym drukiem oferujemy obróbkę CNC, szlifowanie, malowanie, montaż elementów i pakowanie – otrzymujesz część gotową do użycia.</p>
+            <p class="mt-3 text-sm text-slate-300">Poza samym drukiem FDM oferujemy druk 3D w technologiach MJF i SLA poprzez sieć partnerów – jeden punkt kontaktu, wiele technologii.</p>
           </div>
         </div>
       </section>
@@ -173,33 +209,33 @@
         <div class="glass-panel gradient-border grid gap-8 rounded-3xl border px-8 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(320px,360px)]">
           <div class="space-y-6">
             <p class="section-heading">technologia</p>
-            <h2 class="section-title">Maszyny klasy przemysłowej · Kontrola jakości ISO · Parametry klienta</h2>
+            <h2 class="section-title">Maszyny klasy przemysłowej · Kontrola jakości · Parametry klienta</h2>
             <div class="grid gap-4 text-sm text-slate-300 md:grid-cols-2">
               <div>
                 <h3 class="font-semibold text-emerald-300">FDM Production</h3>
-                <p>12 drukarek o polu roboczym do 500&nbsp;mm, dysze 0.2–1.0 mm, prototypy i krótkie serie.</p>
+                <p>6 drukarek o polu roboczym do 250&nbsp;mm³ oraz system wielkogabarytowy 500&nbsp;mm³. Produkcja prototypów i krótkich serii non-stop.</p>
               </div>
               <div>
-                <h3 class="font-semibold text-emerald-300">Metrologia</h3>
-                <p>Skany 3D i pomiary CMM. Raport z każdej partii jako PDF w standardzie.</p>
+                <h3 class="font-semibold text-emerald-300">Skanowanie 3D oraz Projektowanie</h3>
+                <p>Digitalizacja detali, inżynieria wsteczna i projektowanie zamienne. Przygotowujemy dokumentację wdrożeniową.</p>
               </div>
               <div>
                 <h3 class="font-semibold text-emerald-300">Materiały techniczne</h3>
-                <p>PLA, ABS, PETG, PC, TPU – z certyfikatem producenta i utrzymaniem wilgotności.</p>
+                <p>PLA, PETG, ASA, PC, TPU – kontrola wilgotności, certyfikowane dostawy, śledzenie partii.</p>
               </div>
               <div>
                 <h3 class="font-semibold text-emerald-300">Wsparcie projektowe</h3>
-                <p>Dostosowanie detali do druku 3D, redukcja masy, automatyczne generowanie supportów.</p>
+                <p>Dostosowanie detali do druku 3D, redukcja masy, modelowanie supportów pod konkretny proces.</p>
               </div>
             </div>
           </div>
           <div class="space-y-5 text-sm text-slate-300">
             <h3 class="text-base font-semibold text-emerald-300">Co możemy dla Ciebie zrobić?</h3>
-            <ul class="space-y-3">
-              <li>• Funkcjonalne prototypy i części zamienne</li>
-              <li>• Elementy marketingowe i makiety architektoniczne</li>
-              <li>• Narzędzia produkcyjne: uchwyty, przyrządy, obudowy</li>
-              <li>• Pilne wydruki overnight – odbiór o poranku</li>
+            <ul class="accent-list space-y-3">
+              <li>Funkcjonalne prototypy i części zamienne</li>
+              <li>Elementy marketingowe i makiety architektoniczne</li>
+              <li>Narzędzia produkcyjne: uchwyty, przyrządy, obudowy</li>
+              <li>Pilne wydruki overnight – odbiór o poranku</li>
             </ul>
             <p class="text-xs text-slate-500">Masz specyficzne wymagania materiałowe? Daj znać – przygotujemy próbki i specyfikację.</p>
           </div>
@@ -212,20 +248,20 @@
         <div class="relative mt-10 timeline">
           <div class="grid gap-12 lg:grid-cols-4">
             <div class="timeline-step space-y-3 text-sm text-slate-300">
-              <h3 class="text-base font-semibold text-emerald-300">1 · Wycena</h3>
+              <h3 class="text-base font-semibold text-emerald-300"><span class="timeline-index">1</span> Wycena</h3>
               <p>Przesyłasz plik, otrzymujesz cenę oraz termin. W razie pytań – kontaktujemy się błyskawicznie.</p>
             </div>
             <div class="timeline-step space-y-3 text-sm text-slate-300">
-              <h3 class="text-base font-semibold text-emerald-300">2 · Przygotowanie</h3>
+              <h3 class="text-base font-semibold text-emerald-300"><span class="timeline-index">2</span> Przygotowanie</h3>
               <p>Sprawdzamy model, ustawiamy orientację i parametry druku. Ty akceptujesz finalny plan.</p>
             </div>
             <div class="timeline-step space-y-3 text-sm text-slate-300">
-              <h3 class="text-base font-semibold text-emerald-300">3 · Produkcja</h3>
+              <h3 class="text-base font-semibold text-emerald-300"><span class="timeline-index">3</span> Produkcja</h3>
               <p>Druk, chłodzenie, obróbka. Trzymamy się terminów i informujemy o postępach.</p>
             </div>
             <div class="timeline-step space-y-3 text-sm text-slate-300">
-              <h3 class="text-base font-semibold text-emerald-300">4 · Dostawa</h3>
-              <p>Odbiór osobisty w Warszawie lub wysyłka kurierem. W komplecie raport jakości i instrukcja.</p>
+              <h3 class="text-base font-semibold text-emerald-300"><span class="timeline-index">4</span> Dostawa</h3>
+              <p>Odbiór osobisty w Piasecznie lub wysyłka kurierem. W komplecie raport jakości i instrukcja.</p>
             </div>
           </div>
         </div>
@@ -249,14 +285,24 @@
           </div>
           <div class="glass-panel gradient-border space-y-5 rounded-3xl border px-7 py-9 text-sm text-slate-300">
             <h3 class="text-lg font-semibold text-emerald-300">Potrzebujesz stałej współpracy?</h3>
-            <p>Oferujemy abonamenty produkcyjne i dedykowanych opiekunów projektu. Wysyłasz serię modeli, a my prowadzimy rezerwację slotów na maszynach.</p>
+            <p>Oferujemy dedykowanych opiekunów projektu. Wysyłasz serię modeli, a my zapewniamy wsparcie techniczne i projektowe.</p>
             <ul class="space-y-3">
-              <li>✔ SLA/SLS poprzez sieć partnerską</li>
-              <li>✔ Magazynowanie części zamiennych</li>
-              <li>✔ Faktury zbiorcze i raporty miesięczne</li>
+              <li>✔ SLA/SLS/MJF poprzez sieć partnerską</li>
+              <li>✔ Magazynowanie części zamiennych na wirtualny magazyn</li>
+              <li>✔ Faktury zbiorcze</li>
             </ul>
             <a href="#kontakt" class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 hover:text-emerald-200 transition">Zapytaj o współpracę stałą</a>
           </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-6xl px-6 pb-24">
+        <p class="section-heading">zaufali nam</p>
+        <h2 class="section-title">Nasi klienci</h2>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="client-tile">Dacpol S.A.</div>
+          <div class="client-tile">Unilogo Robotics</div>
+          <div class="client-tile client-tile--outline">Twoje logo?</div>
         </div>
       </section>
 
@@ -266,20 +312,29 @@
             <p class="section-heading">kontakt</p>
             <h2 class="section-title">Skontaktuj się z nami</h2>
             <div class="mt-8 space-y-5 text-sm text-slate-300">
-              <p><strong class="text-emerald-300">Telefon:</strong> <a class="hover:text-emerald-200 transition" href="tel:+48500123456">+48 500 123 456</a></p>
+              <p><strong class="text-emerald-300">Telefon:</strong> <a class="hover:text-emerald-200 transition" href="tel:+48537320816">+48 537 320 816</a></p>
               <p><strong class="text-emerald-300">E-mail:</strong> <a class="hover:text-emerald-200 transition" href="mailto:druk@rapidmaker.pl">druk@rapidmaker.pl</a></p>
-              <p><strong class="text-emerald-300">Adres pracowni:</strong> ul. Przemysłowa 15, 00-450 Warszawa</p>
+              <p><strong class="text-emerald-300">Adres pracowni:</strong> ul. Zielony Krąg 1, 05-500 Piaseczno</p>
               <p class="text-xs text-slate-500">Spotkania na miejscu po wcześniejszym umówieniu. Magazyn i produkcja czynne 9:00–17:00.</p>
             </div>
             <div class="mt-6 flex flex-col gap-3 text-sm text-slate-300 md:flex-row md:items-center">
               <div class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-emerald-200">Realizujemy projekty B2B i B2C</div>
               <a href="mailto:druk@rapidmaker.pl?subject=Zapytanie%20o%20druk%203D" class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 hover:text-emerald-200 transition">Wyślij wiadomość</a>
             </div>
+            <div class="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <a href="https://www.instagram.com/rapid.maker/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-200 transition hover:border-emerald-400/60 hover:text-emerald-100">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zm6.2-.9a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                </svg>
+                <span>Instagram / rapid.maker</span>
+              </a>
+              <img src="/assets/instagram-qr.png" alt="Zeskanuj, aby śledzić RapidMaker na Instagramie" class="h-28 w-28 rounded-2xl border border-emerald-400/20 bg-slate-900/50 p-2 shadow-inner" />
+            </div>
           </div>
           <div class="glass-panel gradient-border rounded-3xl border overflow-hidden">
             <iframe
               title="RapidMaker"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2443.920428222649!2d21.030235577285287!3d52.23049055732893!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x471ecc85f3e1f3f5%3A0xa9adb1c05d4f2c54!2sPrzemys%C5%82owa%2015%2C%2000-450%20Warszawa!5e0!3m2!1spl!2spl!4v1700000000000!5m2!1spl!2spl"
+              src="https://www.google.com/maps?q=ul.%20Zielony%20Kr%C4%85g%201%2C%2005-500%20Piaseczno&output=embed"
               width="100%"
               height="360"
               style="border:0;"
@@ -296,7 +351,6 @@
       <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 md:flex-row md:items-center">
         <p>© RapidMaker 2025 · precyzyjny druk 3D z Warszawy.</p>
         <div class="flex gap-4 text-xs uppercase tracking-[0.3em] text-slate-600">
-          <span>ISO-ready</span>
           <span>Bezpieczne uploady</span>
           <span>Obsługa 24/7</span>
         </div>
