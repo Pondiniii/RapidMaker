@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir --break-system-packages flask gunicorn
+RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed flask gunicorn
 
 WORKDIR /workspace
 
