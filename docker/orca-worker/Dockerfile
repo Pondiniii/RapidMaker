@@ -1,17 +1,14 @@
-FROM lscr.io/linuxserver/orcaslicer:latest
+FROM matszwe02/orcaslicer-arm:latest
 
 ENV ORCA_WORKER_PORT=9090 \
     DEBIAN_FRONTEND=noninteractive
 
-# Install Python and HTTP framework
+# Install Python dependencies for HTTP wrapper
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3 \
         python3-pip \
-        xvfb \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies for HTTP wrapper
-RUN pip3 install --no-cache-dir flask gunicorn
+RUN pip3 install --no-cache-dir --break-system-packages flask gunicorn
 
 WORKDIR /workspace
 
