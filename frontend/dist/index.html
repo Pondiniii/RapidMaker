@@ -7,26 +7,6 @@
     <title>RapidMaker · Druk 3D na żądanie</title>
     <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
     <link rel="stylesheet" href="/app.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              emerald: {
-                300: '#3bcf74',
-                400: '#2abf68',
-              },
-              rapid: '#00c896',
-            },
-            fontFamily: {
-              sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
-            },
-          },
-        },
-        darkMode: 'class',
-      };
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -47,7 +27,7 @@
           <a href="#proces" class="hover:text-emerald-300 transition">Proces</a>
           <a href="#kontakt" class="hover:text-emerald-300 transition">Kontakt</a>
         </div>
-        <a href="#wycena" class="rounded-full bg-gradient-to-r from-emerald-400 to-rapid px-5 py-2 text-sm font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">Wycena online</a>
+        <a href="#wycena" class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-emerald-400 to-rapid px-5 py-2 text-sm font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">Wycena online</a>
       </nav>
 
       <div id="hero" class="mx-auto flex max-w-6xl flex-col gap-12 px-6 pb-20 pt-10 md:flex-row md:items-center">
@@ -65,7 +45,7 @@
             <span class="tag-pill">Produkcja małoseryjna</span>
           </div>
           <div class="flex flex-col gap-4 pt-4 md:flex-row md:items-center">
-            <a href="#wycena" class="hero-primary rounded-full bg-gradient-to-r from-emerald-400 to-rapid px-7 py-3 text-base font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">Zrób darmową wycenę</a>
+            <a href="#wycena" class="hero-primary rounded-full bg-gradient-to-r from-emerald-400 to-rapid px-7 py-3 text-center text-base font-semibold text-slate-900 shadow-emerald-400/30 transition hover:shadow-xl hover:shadow-emerald-400/25">Zrób darmową wycenę</a>
             <div class="text-sm text-slate-400">
               <p>➤ Realizacja od 24 h</p>
               <p>➤ Wycenimy także modele niestandardowe</p>
@@ -149,7 +129,13 @@
               <p class="text-xs text-emerald-100/70">Rabaty: powyżej 40 sztuk naliczamy 5% zniżki co każde 10 dodatkowych modeli.</p>
             </div>
 
-            <div id="dropZone" class="drop-zone glass-panel gradient-border flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-600/60 px-6 py-12 text-center text-sm text-slate-300">
+            <div
+              id="dropZone"
+              class="drop-zone glass-panel gradient-border flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-600/60 px-6 py-12 text-center text-sm text-slate-300"
+              role="button"
+              tabindex="0"
+              aria-describedby="uploadHint"
+            >
               <div class="flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
                 <svg class="h-7 w-7 text-emerald-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-9-9v12m0-12 3.75 3.75M12 7.5 8.25 11.25" />
@@ -177,7 +163,7 @@
             </div>
           </div>
 
-          <div id="feedbackArea" class="mt-6 space-y-3"></div>
+          <div id="feedbackArea" class="mt-6 space-y-3" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
 
         <aside id="resultPanel" class="glass-panel gradient-border hidden h-fit rounded-3xl border px-8 py-10">

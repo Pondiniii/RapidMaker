@@ -1,0 +1,17 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "Aktualnie frontend to ręcznie przygotowany build statyczny (`dist/`) serwowany przez Axum. Używamy Tailwind CDN, customowego JS (`app.js`) i glassmorphism, żeby szybko dostarczyć ciemny interfejs z drag’n’drop.",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/app.css -o ./dist/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/app.css -o ./dist/app.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "tailwindcss": "^3.4.10"
+  }
+}

@@ -65,6 +65,13 @@ function wireUpDropZone() {
 
   dropZone.addEventListener('click', () => fileInput.click());
 
+  dropZone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
   dropZone.addEventListener('drop', e => {
     if (e.dataTransfer?.files?.length) {
       fileInput.files = e.dataTransfer.files;
