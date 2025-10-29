@@ -13,7 +13,7 @@ use axum::{
     routing::{get, get_service, post},
     Json, Router,
 };
-use price_engine::{EngineError, ModelKind, PriceEngine, QuoteInput, QuoteOutput, Turnaround};
+use price_engine::{EngineError, ModelKind, OrcaClient, PriceEngine, QuoteInput, QuoteOutput, SliceRequest, Turnaround};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::{io::AsyncWriteExt, net::TcpListener};
@@ -73,6 +73,7 @@ fn setup_tracing() {
 #[derive(Clone)]
 struct AppState {
     engine: Arc<PriceEngine>,
+    orca_client: Arc<OrcaClient>,
     max_upload_bytes: usize,
     upload_dir: Arc<PathBuf>,
 }
@@ -91,8 +92,13 @@ impl AppState {
 
         std::fs::create_dir_all(&upload_dir)?;
 
+        let orca_url = std::env::var("ORCA_WORKER_URL")
+            .unwrap_or_else(|_| "http://orca-worker:9090".to_string());
+        let orca_client = OrcaClient::new(orca_url);
+
         Ok(Self {
             engine: Arc::new(engine),
+            orca_client: Arc::new(orca_client),
             max_upload_bytes: max_upload_mb * 1024 * 1024,
             upload_dir: Arc::new(upload_dir),
         })
@@ -198,14 +204,24 @@ async fn quote_file(
             .engine
             .quote_from_gcode_bytes(&data, input)
             .map_err(ApiError::from_engine)?,
-        ModelKind::ThreeMf => state
-            .engine
-            .quote_from_3mf_bytes(&data, input)
-            .map_err(ApiError::from_engine)?,
-        ModelKind::Stl => state
-            .engine
-            .estimate_from_stl_bytes(&data, input)
-            .map_err(ApiError::from_engine)?,
+        ModelKind::ThreeMf | ModelKind::Stl => {
+            let slice_request = SliceRequest {
+                infill: input.infill_percent,
+                supports: input.supports,
+                profile: None,
+            };
+
+            let metadata = state
+                .orca_client
+                .slice_file(data, file_name, slice_request)
+                .await
+                .map_err(ApiError::from_engine)?;
+
+            state
+                .engine
+                .quote_from_metadata(metadata, input)
+                .map_err(ApiError::from_engine)?
+        }
     };
 
     Ok(Json(quote))
@@ -419,8 +435,7 @@ fn detect_model_kind(file_name: Option<&str>, data: &[u8]) -> Result<ModelKind, 
         {
             return match ext.as_str() {
                 "gcode" => Ok(ModelKind::Gcode),
-                "3mf" => Ok(ModelKind::ThreeMf),
-                "stl" => Ok(ModelKind::Stl),
+                "3mf" | "stl" | "stp" | "step" | "obj" => Ok(ModelKind::ThreeMf),
                 other => Err(ApiError::BadRequest(format!(
                     "unsupported file extension: .{other}"
                 ))),
@@ -432,7 +447,7 @@ fn detect_model_kind(file_name: Option<&str>, data: &[u8]) -> Result<ModelKind, 
         return Ok(ModelKind::ThreeMf);
     }
     if data.starts_with(b"solid ") || data.starts_with(b"SOLID ") {
-        return Ok(ModelKind::Stl);
+        return Ok(ModelKind::ThreeMf);
     }
     if data.starts_with(b";") || data.starts_with(b"G") {
         return Ok(ModelKind::Gcode);
