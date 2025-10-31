@@ -18,13 +18,51 @@ const submitLabel = document.getElementById('quoteSubmitLabel');
 const turnaroundOptions = document.querySelectorAll('.turnaround-option');
 let currentTurnaround = 'standard';
 const units = new Intl.NumberFormat('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const FALLBACK_MATERIALS = [
+  { id: 'pla', display_name: 'PLA', kind: 'fdm', density_g_cm3: 1.25, cost_per_kg: 90.0 },
+  { id: 'abs', display_name: 'ABS', kind: 'fdm', density_g_cm3: 1.05, cost_per_kg: 125.0 },
+  { id: 'petg', display_name: 'PETG', kind: 'fdm', density_g_cm3: 1.27, cost_per_kg: 115.0 },
+  { id: 'pc', display_name: 'PC', kind: 'fdm', density_g_cm3: 1.2, cost_per_kg: 240.0 },
+  { id: 'tpu', display_name: 'TPU', kind: 'fdm', density_g_cm3: 1.25, cost_per_kg: 210.0 },
+  { id: 'asa', display_name: 'ASA', kind: 'fdm', density_g_cm3: 1.07, cost_per_kg: 145.0 },
+];
 
 async function init() {
+  populateMaterials(FALLBACK_MATERIALS, true);
   await hydrateMaterials();
   wireUpDropZone();
   wireUpForm();
   setupTurnaroundToggle();
   setupQuantityWatcher();
+}
+
+function populateMaterials(materials = [], isFallback = false) {
+  if (!materialSelect) {
+    return;
+  }
+  materialSelect.innerHTML = '';
+  const sorted = [...materials].sort((a, b) => {
+    const left = (a && (a.display_name ?? a.id) ? String(a.display_name ?? a.id) : '').toLowerCase();
+    const right = (b && (b.display_name ?? b.id) ? String(b.display_name ?? b.id) : '').toLowerCase();
+    return left.localeCompare(right);
+  });
+  for (const mat of sorted) {
+    if (!mat || !mat.id) {
+      continue;
+    }
+    const option = document.createElement('option');
+    option.value = mat.id;
+    option.textContent = mat.display_name ?? mat.id.toUpperCase();
+    materialSelect.appendChild(option);
+  }
+  if (!materialSelect.value && sorted.length && sorted[0].id) {
+    materialSelect.value = sorted[0].id;
+  }
+  if (isFallback) {
+    materialSelect.dataset.source = 'fallback';
+  } else {
+    delete materialSelect.dataset.source;
+  }
 }
 
 async function hydrateMaterials() {
@@ -34,18 +72,15 @@ async function hydrateMaterials() {
       throw new Error(`HTTP ${res.status}`);
     }
     const materials = await res.json();
-    materials.sort((a, b) => a.display_name.localeCompare(b.display_name));
-    for (const mat of materials) {
-      const option = document.createElement('option');
-      option.value = mat.id;
-      option.textContent = mat.display_name;
-      materialSelect.appendChild(option);
+    if (!Array.isArray(materials) || materials.length === 0) {
+      throw new Error('API zwr\u00f3ci\u0142o pust\u0105 list\u0119 materia\u0142\u00f3w');
     }
+    populateMaterials(materials);
   } catch (error) {
-    pushFeedback(`Nie udało się pobrać listy materiałów: ${error.message}`, 'error');
+    pushFeedback('Nie uda\u0142o si\u0119 pobra\u0107 listy materia\u0142\u00f3w z API (' + error.message + '). Korzystamy z zestawu domy\u015blnego.', 'warning');
+    populateMaterials(FALLBACK_MATERIALS, true);
   }
 }
-
 function wireUpDropZone() {
   ['dragenter', 'dragover'].forEach(evt => {
     dropZone.addEventListener(evt, e => {
@@ -240,94 +275,72 @@ function wireUpForm() {
 }
 
 function renderQuote(quote) {
-  const breakdown = quote.breakdown ?? {};
-
+  const breakdown = quote?.breakdown ?? {};
   if (breakdown.review_required) {
     showManualReview(quote);
     return;
   }
 
-  resultPanel.classList.remove('hidden');
-  resultPanel.classList.add('fade-in');
+  const target = resultBody;
+  if (!target) {
+    pushFeedback('Nie moge wyswietlic wyniku (brak elementu resultBody).', 'error');
+    console.error('renderQuote: missing resultBody element', { quote });
+    return;
+  }
+
+  const metadata = quote?.metadata ?? {};
+  const filament = metadata.filament ?? {};
+  const geometry = metadata.geometry ?? {};
+  const materialName = quote?.material?.display_name ?? quote?.material?.id ?? 'Materia\u0142';
+  const isExpress = breakdown.turnaround === 'express';
+  const discountRate = breakdown.discount_rate ? breakdown.discount_rate * 100 : 0;
+
   manualNotice?.classList.add('hidden');
+  resultPanel?.classList.remove('hidden');
+  resultPanel?.classList.add('fade-in');
   if (submitLabel && submitButton) {
     submitLabel.textContent = submitButton.dataset.autoLabel || 'Policz koszt';
   }
 
-  const metadata = quote.metadata;
-  const filament = metadata.filament ?? {};
-  const materialName = quote.material?.display_name ?? 'Materiał';
-  const isExpress = breakdown.turnaround === 'express';
-  const discountRate = breakdown.discount_rate ? breakdown.discount_rate * 100 : 0;
-
-  const lines = [];
-  lines.push(`<div class="flex items-center justify-between">
-      <p class="text-sm uppercase tracking-[0.25em] text-slate-400">Całkowity koszt</p>
+  const summary = [`<div class="flex items-center justify-between">
+      <p class="text-sm uppercase tracking-[0.25em] text-slate-400">Ca\u0142kowity koszt</p>
       <span class="text-3xl font-semibold text-emerald-300">${formatCurrency(breakdown.total, breakdown.currency)}</span>
-    </div>`);
+    </div>`];
 
-  lines.push('<div class="mt-6 grid gap-3 text-sm text-slate-200">');
-  lines.push(renderFact('Materiał', materialName));
-  lines.push(renderFact('Ilość modeli', `${breakdown.quantity ?? 1} szt.`));
-  lines.push(renderFact('Cena za sztukę', formatCurrency(breakdown.unit_total, breakdown.currency)));
-  lines.push(
-    renderFact(
-      'Termin',
-      isExpress ? '1 dzień (express)' : '3–5 dni roboczych'
-    )
-  );
+  const facts = ['<div class="mt-6 grid gap-3 text-sm text-slate-200">'];
+  facts.push(renderFact('Materia\u0142', materialName));
+  facts.push(renderFact('Ilo\u015b\u0107 modeli', `${breakdown.quantity ?? 1} szt.`));
+  facts.push(renderFact('Cena za sztuk\u0119', formatCurrency(breakdown.unit_total, breakdown.currency)));
+  facts.push(renderFact('Termin', isExpress ? '1 dzie\u0144 (express)' : '3-5 dni roboczych'));
   if (discountRate > 0) {
-    lines.push(renderFact('Zniżka ilościowa', `-${discountRate.toFixed(0)}%`));
+    facts.push(renderFact('Zni\u017cka ilo\u015bciowa', `-${discountRate.toFixed(0)}%`));
   }
   if (isExpress) {
-    lines.push(renderFact('Dopłata express', '+35% priorytet produkcyjny'));
+    facts.push(renderFact('Dop\u0142ata express', '+35% priorytet produkcyjny'));
   }
-  lines.push(renderFact('Zużycie filamentu', `${formatNumber(filament.filament_used_g)} g`));
-  if (filament.filament_used_mm) {
-    lines.push(renderFact('Długość filamentu', `${formatNumber(filament.filament_used_mm / 1000)} m`));
-  }
-  if (filament.print_time_human) {
-    lines.push(renderFact('Czas wydruku', filament.print_time_human));
-  }
-  if (metadata.geometry?.volume_cm3) {
-    lines.push(renderFact('Objętość modelu', `${formatNumber(metadata.geometry.volume_cm3)} cm³`));
-  }
-  if (filament.infill_percent != null) {
-    const suffix = filament.supports_enabled ? ' (z podporami)' : '';
-    lines.push(renderFact('Infill', `${filament.infill_percent}%${suffix}`));
-  }
-  if (filament.solid_ratio_percent != null) {
-    lines.push(renderFact('Szacowany wkład stały', `${formatNumber(filament.solid_ratio_percent)}%`));
-  }
-  lines.push('</div>');
+  facts.push('</div>');
 
-  lines.push('<div class="mt-6 grid gap-3 text-sm text-slate-400">');
-  lines.push(
-    `<p class="leading-relaxed">Cena obejmuje opłatę startową ${formatCurrency(
-      breakdown.base_fee,
-      breakdown.currency
-    )} oraz koszt materiału liczony na podstawie objętości i masy modelu.</p>`
-  );
+  const notes = ['<div class="mt-6 grid gap-3 text-sm text-slate-400">'];
+  notes.push(`<p class="leading-relaxed">Cena obejmuje op\u0142at\u0119 startow\u0105 ${formatCurrency(breakdown.base_fee, breakdown.currency)} oraz koszt materia\u0142u liczony na podstawie obj\u0119to\u015bci i masy modelu.</p>`);
   if (discountRate > 0) {
-    lines.push('<p class="leading-relaxed">Zastosowaliśmy rabat ilościowy na materiał – każda kolejna pula 10 sztuk powyżej 40 daje dodatkowe 5% zniżki.</p>');
+    notes.push('<p class="leading-relaxed">Zastosowali\u015bmy rabat ilo\u015bciowy \u2013 ka\u017cda kolejna pula 10 sztuk powy\u017cej 40 daje dodatkowe 5% zni\u017cki.</p>');
   }
   if (isExpress) {
-    lines.push('<p class="leading-relaxed">Tryb express rezerwuje drukarki na dedykowany slot, obejmuje wydłużone zmiany i ręczną kontrolę jakości.</p>');
+    notes.push('<p class="leading-relaxed">Tryb express rezerwuje drukarki na dedykowany slot, obejmuje wyd\u0142u\u017cone zmiany i r\u0119czn\u0105 kontrol\u0119 jako\u015bci.</p>');
   }
   if (breakdown.is_estimate) {
-    lines.push('<p class="text-xs leading-relaxed text-slate-500">Szacujemy na bazie STL (infill 25%, podpory włączone). Jeśli masz G-code lub 3MF z Orca Slicer, użyj go dla pełnej dokładności.</p>');
+    notes.push('<p class="text-xs leading-relaxed text-slate-500">Szacujemy na bazie STL (infill 25%, podpory wlaczone). Jesli masz G-code lub 3MF z Orca Slicer, uzyj go dla pelnej dokladnosci.</p>');
   }
-  lines.push('</div>');
+  notes.push('</div>');
 
-  resultBody.innerHTML = lines.join('\n');
+  target.innerHTML = [...summary, ...facts, ...notes].join('\n');
 }
-
 function showManualReview(quote) {
   manualNotice?.classList.remove('hidden');
   if (submitLabel && submitButton) {
     submitLabel.textContent = submitButton.dataset.manualLabel || 'Wyślij do analizy';
   }
-  resultPanel.classList.add('hidden');
+  resultPanel?.classList.add('hidden');
   updateManualMailto();
   pushFeedback('Ten model wymaga analizy inżynieryjnej – skontaktujemy się z ofertą indywidualną.', 'info');
 }
@@ -340,8 +353,10 @@ function renderFact(title, value) {
 }
 
 function toggleLoading(isLoading) {
-  loader.classList.toggle('hidden', !isLoading);
-  form.querySelectorAll('input, button, select').forEach(el => (el.disabled = isLoading));
+  loader?.classList.toggle('hidden', !isLoading);
+  if (form) {
+    form.querySelectorAll('input, button, select').forEach(el => (el.disabled = isLoading));
+  }
 }
 
 function pushFeedback(message, variant = 'info') {
@@ -349,15 +364,18 @@ function pushFeedback(message, variant = 'info') {
     info: 'text-slate-200 bg-slate-800/80 border-slate-700/60',
     success: 'text-emerald-200 bg-emerald-900/30 border-emerald-500/30',
     error: 'text-rose-200 bg-rose-900/30 border-rose-500/30',
+    warning: 'text-amber-200 bg-amber-900/20 border-amber-500/40',
   };
   const container = document.createElement('div');
   container.className = `glass-panel gradient-border rounded-xl border px-4 py-3 fade-in ${colors[variant] ?? colors.info}`;
   container.innerHTML = `<p class="text-sm font-medium">${message}</p>`;
-  feedbackArea.appendChild(container);
+  feedbackArea?.appendChild(container);
 }
 
 function clearFeedback() {
-  feedbackArea.innerHTML = '';
+  if (feedbackArea) {
+    feedbackArea.innerHTML = '';
+  }
 }
 
 async function safeJson(response) {
@@ -392,4 +410,23 @@ function formatBytes(bytes) {
   return `${num.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
-init();
+function startApp() {
+  init().catch(err => {
+    console.error('Init error:', err);
+    pushFeedback('Nie uda\u0142o si\u0119 zainicjalizowa\u0107 narz\u0119dzia: ' + err.message, 'error');
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
+
+
+
+
+
+
+
+
