@@ -267,7 +267,8 @@ function wireUpForm() {
       renderQuote(quote);
       pushFeedback('Wycena gotowa ✨', 'success');
     } catch (error) {
-      pushFeedback(`Nie udało się obliczyć kosztu: ${error.message}`, 'error');
+      console.error('Błąd wyceny:', error.message, error);
+      pushFeedback('Przepraszamy, wyceniarka jest tymczasowo niedostępna. Napisz do nas: druk@rapidmaker.pl', 'error');
     } finally {
       toggleLoading(false);
     }

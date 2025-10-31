@@ -161,6 +161,60 @@ impl PriceEngine {
     }
 }
 
+fn parse_number_after_equals(line: &str) -> Option<f64> {
+    let (_, rhs) = line.split_once('=')?;
+    rhs.trim()
+        .split_whitespace()
+        .next()
+        .and_then(|token| token.replace(',', ".").parse::<f64>().ok())
+}
+
+fn parse_print_time_seconds(line: &str) -> Option<u32> {
+    let lower = line.to_ascii_lowercase();
+    if !lower.contains("estimated printing time") {
+        return None;
+    }
+
+    let (_, rhs) = line.split_once('=')?;
+    let tokens = rhs.trim();
+
+    let mut total_seconds = 0u32;
+    let mut current_number = String::new();
+
+    for ch in tokens.chars() {
+        if ch.is_ascii_digit() {
+            current_number.push(ch);
+            continue;
+        }
+
+        if current_number.is_empty() {
+            continue;
+        }
+
+        let value: u32 = current_number.parse().ok()?;
+        current_number.clear();
+
+        match ch {
+            'h' | 'H' => total_seconds += value * 3600,
+            'm' | 'M' => total_seconds += value * 60,
+            's' | 'S' => total_seconds += value,
+            _ => {}
+        }
+    }
+
+    if !current_number.is_empty() {
+        if let Ok(value) = current_number.parse::<u32>() {
+            total_seconds += value;
+        }
+    }
+
+    if total_seconds == 0 {
+        None
+    } else {
+        Some(total_seconds)
+    }
+}
+
 fn parse_gcode_metadata(gcode: &str) -> ModelMetadata {
     let mut filament = FilamentStats::default();
 

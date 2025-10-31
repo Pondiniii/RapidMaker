@@ -3,6 +3,12 @@
 FROM rust:1.76-slim AS builder
 WORKDIR /app
 
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Cache dependencies
 COPY Cargo.toml ./
 COPY crates/price-engine/Cargo.toml crates/price-engine/Cargo.toml
