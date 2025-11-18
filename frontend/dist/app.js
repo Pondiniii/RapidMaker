@@ -215,7 +215,7 @@ function updateManualMailto() {
     'Dodatkowe informacje:'
   ];
   const body = encodeURIComponent(bodyLines.join('\n'));
-  manualMailto.href = `mailto:druk@rapidmaker.pl?subject=${subject}&body=${body}`;
+  manualMailto.href = `mailto:rapidmaker@rapidmaker.pl?subject=${subject}&body=${body}`;
 }
 
 function wireUpForm() {
@@ -268,7 +268,7 @@ function wireUpForm() {
       pushFeedback('Wycena gotowa ✨', 'success');
     } catch (error) {
       console.error('Błąd wyceny:', error.message, error);
-      pushFeedback('Przepraszamy, wyceniarka jest tymczasowo niedostępna. Napisz do nas: druk@rapidmaker.pl', 'error');
+      pushFeedback('Przepraszamy, wyceniarka jest tymczasowo niedostępna. Napisz do nas: rapidmaker@rapidmaker.pl', 'error');
     } finally {
       toggleLoading(false);
     }
@@ -423,7 +423,6 @@ if (document.readyState === 'loading') {
 } else {
   startApp();
 }
-
 
 
 
